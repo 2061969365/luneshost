@@ -1,0 +1,38 @@
+name: Lunes Host Daily KeepAlive
+
+on:
+  schedule:
+    # 每天北京时间下午 4:30（格林威治时间 8:30）自动运行一次
+    - cron: '30 8 * * *'
+  workflow_dispatch: # 支持手动触发测试
+
+jobs:
+  check-and-start:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install playwright
+          playwright install chromium
+
+      - name: Run check script
+        env:
+          LUNES_SERVER_URL: ${{ secrets.LUNES_SERVER_URL }}
+          LUNES_COOKIES: ${{ secrets.LUNES_COOKIES }}
+        run: python lunes_run.py
+
+      - name: Upload Debug Screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lunes-debug-screenshot
+          path: lunes_debug_screenshot.png
+          if-no-files-found: ignore
