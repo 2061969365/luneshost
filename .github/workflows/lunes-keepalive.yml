@@ -20,11 +20,29 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # 核心改变：安装 seleniumbase 代替 playwright
+          # 安装 seleniumbase 和 requests
           pip install seleniumbase requests
 
       - name: Set up WARP
-        uses: fscarmen/warp-on-actions@v1.1
+        uses: fscarmen/warp-on-actions@v1.4
+        with:
+          mode: client  # 指定运行官方客户端模式，避免 TUN 虚拟网卡劫持系统网络
+          stack: dual
+
+      # ====== 核心步骤：将 WARP 设为本地代理，并启动连接 ======
+      - name: Configure WARP Proxy Mode
+        run: |
+          echo "正在将 WARP 切换至 SOCKS5 代理模式..."
+          # 设置为局部代理模式
+          sudo warp-cli --accept-tos mode proxy || true
+          # 将本地代理端口强制指定为 40000 (默认也是这个)
+          sudo warp-cli --accept-tos proxy port 40000 || sudo warp-cli --accept-tos set-proxy-port 40000 || true
+          # 启动连接
+          sudo warp-cli --accept-tos connect || true
+          echo "等待 5 秒建立代理连接..."
+          sleep 5
+          # 在系统终端测试该代理是否可以正常访问网络，如果成功会显示 warp=on
+          curl --socks5-hostname 127.0.0.1:40000 https://cloudflare.com/cdn-cgi/trace || true
 
       - name: Run check script
         env:
