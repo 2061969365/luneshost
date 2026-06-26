@@ -2,8 +2,9 @@ name: Lunes Host Daily KeepAlive
 
 on:
   schedule:
+    # 每天北京时间下午 4:30（格林威治时间 8:30）自动运行一次
     - cron: '30 8 * * *'
-  workflow_dispatch:
+  workflow_dispatch: # 支持手动触发测试
 
 jobs:
   check-and-start:
@@ -19,15 +20,14 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # 关键修改：在这里加上 requests 依赖库安装
           pip install playwright requests
           playwright install chromium
 
       - name: Run check script
         env:
           LUNES_SERVER_URL: ${{ secrets.LUNES_SERVER_URL }}
-          LUNES_COOKIES: ${{ secrets.LUNES_COOKIES }}
-          # 传入 TG 环境变量
+          LUNES_EMAIL: ${{ secrets.LUNES_EMAIL }}
+          LUNES_PASSWORD: ${{ secrets.LUNES_PASSWORD }}
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
         run: python lunes_run.py
