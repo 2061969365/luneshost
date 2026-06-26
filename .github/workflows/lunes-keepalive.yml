@@ -2,7 +2,7 @@ name: Lunes Host Daily KeepAlive
 
 on:
   schedule:
-    # 每天北京时间下午 4:30（格林威治时间 8:30）自动运行一次
+    # 每天北京时间下午 4:30 自动执行一次保活打卡
     - cron: '30 8 * * *'
   workflow_dispatch: # 支持手动触发测试
 
@@ -20,8 +20,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install playwright requests
-          playwright install chromium
+          # 核心改变：安装 seleniumbase 代替 playwright
+          pip install seleniumbase requests
+
+      - name: Set up WARP
+        uses: fscarmen/warp-on-actions@v1.1
 
       - name: Run check script
         env:
